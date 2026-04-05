@@ -1,4 +1,5 @@
 import { Trash2 } from "lucide-react";
+import { exportToCSV, exportToJSON } from "../utils/exportData";
 
 export default function Transactions({
   filtered,
@@ -11,8 +12,10 @@ export default function Transactions({
 }) {
   return (
     <>
-      {/* HEADER */}
+      {/* HEADER + ACTIONS */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+
+        {/* LEFT */}
         <div>
           <h1 className="text-2xl font-bold">Transactions</h1>
           <p className="text-gray-400 text-sm">
@@ -20,31 +23,51 @@ export default function Transactions({
           </p>
         </div>
 
-        {role === "admin" && (
+        {/* RIGHT ACTIONS */}
+        <div className="flex flex-wrap gap-2">
+
+          {/* EXPORT BUTTONS */}
           <button
-            onClick={addTransaction}
-            className="bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2 rounded-xl shadow-lg hover:scale-105 transition"
+            onClick={() => exportToCSV(filtered)}
+            className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-lg hover:bg-emerald-500/20 transition"
           >
-            + Add Transaction
+            Export CSV
           </button>
-        )}
+
+          <button
+            onClick={() => exportToJSON(filtered)}
+            className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-4 py-2 rounded-lg hover:bg-purple-500/20 transition"
+          >
+            Export JSON
+          </button>
+
+          {/* ADD BUTTON */}
+          {role === "admin" && (
+            <button
+              onClick={addTransaction}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2 rounded-xl shadow-lg hover:scale-105 transition"
+            >
+              + Add Transaction
+            </button>
+          )}
+        </div>
       </div>
 
       {/* SEARCH */}
       <input
         type="text"
         placeholder="Search transactions..."
-        className="mb-4 p-3 bg-[#0f1720] border border-white/10 rounded-xl w-full outline-none"
+        className="mb-4 p-3 bg-[#0b0f14] border border-white/5 rounded-xl w-full outline-none"
         onChange={(e) => setSearch(e.target.value)}
       />
 
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:flex gap-3 mb-5">
-        <div className="bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+        <div className="bg-white/5 px-4 py-2 rounded-xl border border-white/5">
           Showing: {filtered.length} results
         </div>
 
-        <div className="bg-green-500/10 text-green-400 px-4 py-2 rounded-xl">
+        <div className="bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-xl">
           Income: ${income}
         </div>
 
@@ -54,11 +77,11 @@ export default function Transactions({
       </div>
 
       {/* TABLE */}
-      <div className="bg-[#0f1720] border border-white/10 rounded-2xl overflow-x-auto">
+      <div className="bg-[#0b0f14] border border-white/5 rounded-2xl overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
-          
+
           {/* HEADER */}
-          <thead className="text-gray-400 border-b border-white/10">
+          <thead className="text-gray-400 border-b border-white/5">
             <tr>
               <th className="p-4 text-left">Date</th>
               <th className="p-4 text-left">Category</th>
@@ -87,7 +110,7 @@ export default function Transactions({
 
                   {/* CATEGORY */}
                   <td className="p-4">
-                    <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs">
+                    <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs">
                       {t.category}
                     </span>
                   </td>
@@ -97,7 +120,7 @@ export default function Transactions({
                     <span
                       className={`px-3 py-1 rounded-full text-xs capitalize ${
                         t.type === "income"
-                          ? "bg-green-500/10 text-green-400"
+                          ? "bg-emerald-500/10 text-emerald-400"
                           : "bg-red-500/10 text-red-400"
                       }`}
                     >
@@ -109,14 +132,14 @@ export default function Transactions({
                   <td
                     className={`p-4 font-medium ${
                       t.type === "income"
-                        ? "text-green-400"
+                        ? "text-emerald-400"
                         : "text-red-400"
                     }`}
                   >
                     ${t.amount}
                   </td>
 
-                  {/* DELETE ACTION */}
+                  {/* DELETE */}
                   {role === "admin" && (
                     <td className="p-4">
                       <button

@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
-import { transactions as initialData } from "./data/data";
 import { motion } from "framer-motion";
 
 import Transactions from "./pages/Transactions";
 import Insights from "./pages/Insights";
-import Dashboard from "./pages/Dashboard"; // ✅ NEW
+import Dashboard from "./pages/Dashboard";
+
+import {
+  fetchTransactions,
+  createTransaction,
+  removeTransaction,
+} from "./api/mockApi";
 
 function App() {
   const [transactions, setTransactions] = useState([]);
@@ -13,38 +18,27 @@ function App() {
   const [page, setPage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // LOAD DATA
+  // 🔌 FETCH (MOCK API)
   useEffect(() => {
-    const saved = localStorage.getItem("transactions");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setTransactions(parsed.length > 0 ? parsed : initialData);
-    } else {
-      setTransactions(initialData);
-    }
+    fetchTransactions().then((data) => {
+      setTransactions(data);
+    });
   }, []);
 
-  // SAVE DATA
-  useEffect(() => {
-    if (transactions.length > 0) {
-      localStorage.setItem("transactions", JSON.stringify(transactions));
-    }
-  }, [transactions]);
-
-  // FILTER
+  // 🔍 FILTER
   const filtered = transactions.filter((t) =>
     t.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ADD
-  const addTransaction = () => {
+  // ➕ ADD (API)
+  const addTransaction = async () => {
     const amount = prompt("Enter amount:");
     const category = prompt("Enter category:");
     const type = prompt("Type (income/expense):");
 
     if (!amount || !category || !type) return;
 
-    const newTransaction = {
+    const newTx = {
       id: Date.now(),
       date: new Date().toISOString().split("T")[0],
       amount: Number(amount),
@@ -52,18 +46,20 @@ function App() {
       type,
     };
 
-    setTransactions([newTransaction, ...transactions]);
+    const updated = await createTransaction(newTx);
+    setTransactions(updated);
   };
 
-  // DELETE
-  const deleteTransaction = (id) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
+  // ❌ DELETE (API)
+  const deleteTransaction = async (id) => {
+    const updated = await removeTransaction(id);
+    setTransactions(updated);
   };
 
   return (
     <div className="flex min-h-screen text-white bg-[#050505]">
 
-      {/* MOBILE BUTTON */}
+      {/* MOBILE MENU BUTTON */}
       <button
         className="md:hidden fixed top-4 left-4 z-50 bg-[#0b0f14] p-2 rounded-lg border border-white/5"
         onClick={() => setSidebarOpen(true)}
@@ -87,7 +83,7 @@ function App() {
           FinFlow
         </h1>
 
-        {/* NAVIGATION */}
+        {/* NAV */}
         <div className="space-y-2">
           {["dashboard", "transactions", "insights"].map((item) => (
             <div
@@ -122,13 +118,15 @@ function App() {
         </div>
       </div>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT WITH ANIMATION */}
       <motion.div
+        key={page}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
         className="flex-1 p-4 md:p-6 max-w-7xl mx-auto md:ml-64"
       >
-        {/* ✅ NEW DASHBOARD */}
+        {/* DASHBOARD */}
         {page === "dashboard" && (
           <Dashboard transactions={transactions} />
         )}
@@ -137,8 +135,6 @@ function App() {
         {page === "transactions" && (
           <Transactions
             filtered={filtered}
-            income={0}
-            expense={0}
             role={role}
             addTransaction={addTransaction}
             deleteTransaction={deleteTransaction}
